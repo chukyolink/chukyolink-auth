@@ -1,0 +1,64 @@
+name: Test
+
+on:
+  push:
+    paths:
+      - 'src/**'
+      - '.eslintrc.json'
+      - '.github/workflows/test.yml'
+  workflow_dispatch:
+    inputs:
+      autofix:
+        description: 'Autofix by ESLint'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  eslint:
+    name: ESLint
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install pnpm
+        uses: pnpm/action-setup@v5
+        with:
+          run_install: false
+      - name: Install Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          cache-dependency-path: pnpm-lock.yaml
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Generate types
+        run: pnpm run next:typegen
+      - name: Run ESLint
+        if: ${{ !inputs.autofix }}
+        run: pnpm run lint
+        env:
+          CI: true
+          NODE_ENV: development
+      - name: Run ESLint (autofix)
+        id: eslint_autofix
+        if: ${{ inputs.autofix }}
+        run: pnpm run lint:fix
+        continue-on-error: true
+        env:
+          CI: true
+          NODE_ENV: development
+      - name: Push to GitHub
+        if: ${{ inputs.autofix }}
+        uses: EndBug/add-and-commit@v10.0.0
+        with:
+          default_author: github_actions
+          message: |
+            :art: Autofix by ESLint
+
+            Co-authored-by: ${{ github.actor }} <${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com>
+      - name: Post Run ESLint (autofix)
+        if: ${{ steps.eslint_autofix.outcome == 'failure' }}
+        run: exit 1
