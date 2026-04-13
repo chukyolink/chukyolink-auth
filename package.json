@@ -1,0 +1,36 @@
+{
+  "name": "@chukyolink/auth",
+  "version": "0.1.0",
+  "description": "中京大学の認証システムを利用するためのパッケージ",
+  "type": "module",
+  "scripts": {
+    "lint": "eslint",
+    "lint:fix": "eslint --fix",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": {
+    "name": "KATO Hayate",
+    "email": "dev@hayatek.jp",
+    "url": "https://hayatek.jp/"
+  },
+  "license": "UNLICENSED",
+  "packageManager": "pnpm@10.26.0",
+  "publishConfig": {
+    "access": "restricted",
+    "registry": "https://npm.pkg.github.com/"
+  },
+  "main": "src/index.ts",
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@stylistic/eslint-plugin": "^5.10.0",
+    "@types/node": "^25.6.0",
+    "@typescript-eslint/eslint-plugin": "^8.58.1",
+    "@typescript-eslint/parser": "^8.58.1",
+    "eslint": "^10.2.0",
+    "eslint-plugin-tsdoc": "^0.5.2",
+    "eslint-plugin-unicorn": "^64.0.0",
+    "globals": "^17.5.0",
+    "jiti": "^2.6.1",
+    "typescript": "^6.0.2"
+  }
+}
