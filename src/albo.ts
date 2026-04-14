@@ -53,10 +53,19 @@ interface LoginTypeCheckRequest {
 
 
 /**
+ * ログインリクエストの認証方法の列挙型。
+ */
+enum AuthType {
+  Password = 0,
+  Otp = 1,
+}
+
+
+/**
  * ログインリクエストの型定義。
  */
 interface LoginRequest {
-  authtype: 0;
+  authtype: AuthType;
   login_exec: 1;
   username: string;
   password: string;
@@ -141,6 +150,53 @@ async function checkLoginType(username: string, authState: string, cookieStore: 
 
 
 /**
+ * 認証成功後のSAMLResponseをACSに送信してセッションIDを取得する。
+ *
+ * @param samlResponse - SAMLResponse
+ * @param cookieStore - CookieStore
+ * @returns セッションID
+ */
+async function submitAcs(samlResponse: string, cookieStore: CookieStore): Promise<string> {
+  const acsRequest: ACSRequest = {
+    SAMLResponse: samlResponse,
+  };
+  const formDataAcs = new URLSearchParams();
+  for (const [key, value] of Object.entries(acsRequest)) {
+    formDataAcs.append(key, String(value));
+  }
+  const acsResponse = await fetch(ACS_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Cookie': cookieStore.getCookieHeader(),
+    },
+    body: formDataAcs.toString(),
+    redirect: 'manual',
+  });
+
+  const cookies = acsResponse.headers.getSetCookie();
+  const sessionId = cookies.find(cookie => (
+    cookie.startsWith(ALBO_SESSION_COOKIE_NAME + '=')
+  ))?.split(';')[0]!.split('=')[1];
+
+  if (!sessionId) {
+    throw new Error('Failed to retrieve session ID from ACS response');
+  }
+
+  return sessionId;
+}
+
+
+/**
+ * ALBOログインの二段階認証のOTPを送信する関数の型定義。
+ *
+ * @param otp - OTP
+ * @returns ALBOセッションID
+ */
+export type SubmitOtpFunction = (otp: string) => Promise<string>;
+
+
+/**
  * ALBOにログインしてセッションIDを取得する。
  *
  * @param username - ユーザー名 (CU_ID)
@@ -154,9 +210,9 @@ async function loginAlbo(
   password: string,
   authState: string,
   cookieStore: CookieStore,
-): Promise<string> {
+): Promise<string | SubmitOtpFunction> {
   const requestBody: LoginRequest = {
-    authtype: 0,
+    authtype: AuthType.Password,
     login_exec: 1,
     username: username,
     password: password,
@@ -189,51 +245,96 @@ async function loginAlbo(
   const dom = new JSDOM(responseData);
   const samlResponse = dom.window.document.querySelector('input[name="SAMLResponse"]')?.getAttribute('value');
 
-  const acsRequest: ACSRequest = {
-    SAMLResponse: samlResponse!,
-  };
-  const formDataAcs = new URLSearchParams();
-  for (const [key, value] of Object.entries(acsRequest)) {
-    formDataAcs.append(key, String(value));
+  if (!samlResponse) {
+    const errorArea = dom.window.document.querySelector('#ldaperror_area');
+    const authType = dom.window.document.querySelector('#authtype');
+    if (errorArea) {
+      throw new Error('Authentication failed', { cause: new Error(errorArea.querySelector('p')?.textContent.trim()) });
+    } else if (authType) {
+      const authTypeValue = authType.getAttribute('value');
+      if (authTypeValue === String(AuthType.Otp)) {
+        const submitOtp: SubmitOtpFunction = async (otp) => {
+          const otpRequestBody: LoginRequest = {
+            authtype: AuthType.Otp,
+            login_exec: 1,
+            username: username,
+            password: otp,
+            AuthState: authState,
+          };
+
+          const otpFormData = new URLSearchParams();
+          for (const [key, value] of Object.entries(otpRequestBody)) {
+            if (typeof value === 'object') {
+              otpFormData.append(key, JSON.stringify(value));
+            } else {
+              otpFormData.append(key, String(value));
+            }
+          }
+
+          const otpResponse = await fetch(LOGIN_URL, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+              'Cookie': cookieStore.getCookieHeader(),
+            },
+            body: otpFormData.toString(),
+          });
+
+          if (!otpResponse.ok) {
+            throw new Error(`Failed to submit OTP: ${otpResponse.statusText}`);
+          }
+
+          const otpResponseData = await otpResponse.text();
+          const otpDom = new JSDOM(otpResponseData);
+          const otpSamlResponse = otpDom.window.document
+            .querySelector('input[name="SAMLResponse"]')
+            ?.getAttribute('value');
+
+          if (!otpSamlResponse) {
+            const otpErrorArea = otpDom.window.document.querySelector('#ldaperror_area')
+              || otpDom.window.document.querySelector('div.c-message._error');
+            const error = otpErrorArea ? (
+              new Error(
+                'OTP authentication failed',
+                {
+                  cause: new Error(otpErrorArea.querySelector('p')?.textContent.trim()),
+                },
+              )
+            ) : new Error('SAMLResponse not found in OTP response');
+            throw error;
+          }
+
+          return await submitAcs(otpSamlResponse, cookieStore);
+        };
+        return submitOtp;
+      } else {
+        throw new Error(`Unexpected authentication type: ${authTypeValue}`);
+      }
+    }
+    throw new Error('SAMLResponse not found in login response');
   }
-  const acsResponse = await fetch(ACS_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'Cookie': cookieStore.getCookieHeader(),
-    },
-    body: formDataAcs.toString(),
-    redirect: 'manual',
-  });
 
-  const cookies = acsResponse.headers.getSetCookie();
-  const sessionId = cookies.find(cookie => (
-    cookie.startsWith(ALBO_SESSION_COOKIE_NAME + '=')
-  ))?.split(';')[0]!.split('=')[1];
-
-  if (!sessionId) {
-    throw new Error('Failed to retrieve session ID from ACS response');
-  }
-
-  return sessionId;
+  return await submitAcs(samlResponse, cookieStore);
 }
 
 
 /**
  * 利用可能なログイン方法を確認し、ALBOにログインしてセッションIDを取得する。
  *
+ * パスワードログインが利用可能な場合はセッションIDを返し、OTPログインが必要な場合はOTP送信関数を返す。
+ *
  * @param username - ユーザー名 (CU_ID)
  * @param password - パスワード
- * @returns ALBOセッションID
+ * @returns ALBOセッションIDまたはOTP送信関数
  */
-export async function getAlboSessionId(username: string, password: string): Promise<string> {
+export async function getAlboSessionId(username: string, password: string): Promise<string | SubmitOtpFunction> {
   const { authState, cookieStore } = await getAuthState();
   const loginTypes = await checkLoginType(username, authState, cookieStore);
 
-  if (!loginTypes.includes('Password')) {
+  if (!loginTypes.includes('Password') && !loginTypes.includes('OTP')) {
     throw new Error('Password login is not available for this user');
   }
 
-  const sessionId = await loginAlbo(username, password, authState, cookieStore);
-  return sessionId;
+  const result = await loginAlbo(username, password, authState, cookieStore);
+  return result;
 }

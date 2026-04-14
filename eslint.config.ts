@@ -33,6 +33,7 @@ export default defineConfig([
       'new-cap': ['error', { capIsNew: false }],
       'no-extra-semi': 'error',
       'no-trailing-spaces': 'error',
+      'no-unused-vars': 'off', // TS非対応
       'object-curly-spacing': ['error', 'always'],
       'semi': ['error', 'always'],
       'space-before-blocks': 'error',
