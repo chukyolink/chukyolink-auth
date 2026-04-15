@@ -29,6 +29,6 @@ if (typeof result === 'function') {
 ### `.npmrc`
 
 ```npmrc
-//npm.pkg.github.com/:_authToken=${NPM_TOKEN}
+//npm.pkg.github.com/:_authToken=${GITHUB_NPM_TOKEN}
 @chukyolink:registry=https://npm.pkg.github.com
 ```
