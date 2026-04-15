@@ -4,6 +4,18 @@
 
 ## 使用法
 
+```ts
+import { getAlboSessionId } from '@chukyolink/auth';
+
+let alboSessionId;
+const result = await getAlboSessionId('t399999', 'password');
+if (typeof result === 'function') {
+  alboSessionId = await result('000000'); // OTP
+} else {
+  alboSessionId = result;
+}
+```
+
 ### `package.json`
 
 ```json
