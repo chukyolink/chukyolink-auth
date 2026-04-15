@@ -1,4 +1,4 @@
-import { defineConfig } from 'eslint/config';
+import { defineConfig, globalIgnores } from 'eslint/config';
 import typescriptParser from '@typescript-eslint/parser';
 import globals from 'globals';
 
@@ -10,6 +10,7 @@ import tsdoc from 'eslint-plugin-tsdoc';
 import unicorn from 'eslint-plugin-unicorn';
 
 export default defineConfig([
+  globalIgnores(['dist/**', 'node_modules/**']),
   js.configs.recommended,
   unicorn.configs.recommended,
   {

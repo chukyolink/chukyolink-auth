@@ -4,6 +4,7 @@
   "description": "中京大学の認証システムを利用するためのパッケージ",
   "type": "module",
   "scripts": {
+    "build": "tsc",
     "lint": "eslint",
     "lint:fix": "eslint --fix",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -19,13 +20,23 @@
     "access": "restricted",
     "registry": "https://npm.pkg.github.com/"
   },
-  "main": "src/index.ts",
+  "files": [
+    "./dist/*"
+  ],
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@stylistic/eslint-plugin": "^5.10.0",
+    "@types/jsdom": "^28.0.1",
     "@types/node": "^25.6.0",
     "@typescript-eslint/eslint-plugin": "^8.58.1",
     "@typescript-eslint/parser": "^8.58.1",
+    "esbuild": "^0.28.0",
     "eslint": "^10.2.0",
     "eslint-plugin-tsdoc": "^0.5.2",
     "eslint-plugin-unicorn": "^64.0.0",
@@ -34,7 +45,6 @@
     "typescript": "^6.0.2"
   },
   "dependencies": {
-    "@types/jsdom": "^28.0.1",
     "jsdom": "^29.0.2"
   }
 }
