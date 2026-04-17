@@ -2,18 +2,32 @@
 
 中京大学の認証システムを利用するためのパッケージ。
 
-## 使用法
+## 使用例
 
 ```ts
-import { getAlboSessionId } from '@chukyolink/auth';
+import {
+  AuthType, initializeLoginSession, checkAuthType, submitPassword, submitOtp,
+  loginAlboViaShib, loginManaboViaShib, loginCubicsViaShib,
+} from '@chukyolink/auth';
 
-let alboSessionId;
-const result = await getAlboSessionId('t399999', 'password');
-if (typeof result === 'function') {
-  alboSessionId = await result('000000'); // OTP
-} else {
-  alboSessionId = result;
+import fetchCookie from 'fetch-cookie';
+
+
+const username = 'z999999'; // CU_ID
+const { authState, cookieJar } = await initializeLoginSession();
+const authTypes: AuthType[] = await checkAuthType(username, authState, cookieJar)
+if (!await submitPassword(username, 'password', authState, cookieJar)) {
+  if !authTypes.includes(AuthType.OTP) {
+    throw new Error('OTP authentication unavailable');
+  }
+  await submitOtp(username, '999999', authState, cookieJar);
 }
+await loginAlboViaShib(cookieJar); // ALBOにログイン
+await loginManaboViaShib(cookieJar); // MaNaBoにログイン
+await loginCubicsViaShib(cookieJar); // CUBICSにログイン
+
+const cfetch = fetchCookie(fetch, cookieJar);
+await fetch('https://albo.chukyo-u.ac.jp/api/class/time-table'); // 時間割情報取得
 ```
 
 ### `package.json`
@@ -21,7 +35,7 @@ if (typeof result === 'function') {
 ```json
 {
   "dependencies": {
-    "@chukyolink/auth": "^v0.1.0"
+    "@chukyolink/auth": "^v1.2.0"
   }
 }
 ```
