@@ -1,18 +1,25 @@
 import fetchCookie from 'fetch-cookie';
 import { CookieJar } from 'tough-cookie';
-
 import { JSDOM } from 'jsdom';
+
+import { defaultHttpHeaders, handleSamlResponse } from './common.ts';
 
 
 const MANABO_LOGIN_URL: string = 'https://MaNaBo.cnc.chukyo-u.ac.jp/auth/shibboleth/';
+/** @deprecated v2.0.0で削除予定 */
 const LOGIN_TYPE_CHECKING_URL: string = 'https://shib.chukyo-u.ac.jp/cloudlink/module.php/cloudlink/checktype.php';
+/** @deprecated v2.0.0で削除予定 */
 const LOGIN_URL: string = 'https://shib.chukyo-u.ac.jp/cloudlink/module.php/cloudlink/loginuserpass.php';
+/** @deprecated v2.0.0で削除予定 */
 const ACS_URL: string = 'https://MaNaBo.cnc.chukyo-u.ac.jp/Shibboleth.sso/SAML2/POST';
+/** @deprecated v2.0.0で削除予定 */
 export const MANABO_SESSION_COOKIE_NAME: string = 'GlexaSESSID';
 
 
 /**
  * ログイン方法の確認リクエストの型定義。
+ *
+ * @deprecated v2.0.0で削除予定
  */
 interface LoginTypeCheckRequest {
   AuthState: string;
@@ -24,6 +31,8 @@ interface LoginTypeCheckRequest {
 
 /**
  * ログインリクエストの認証方法の列挙型。
+ *
+ * @deprecated v2.0.0で削除予定
  */
 enum AuthType {
   Password = 0,
@@ -33,6 +42,8 @@ enum AuthType {
 
 /**
  * ログインリクエストの型定義。
+ *
+ * @deprecated v2.0.0で削除予定
  */
 interface LoginRequest {
   authtype: AuthType;
@@ -45,6 +56,8 @@ interface LoginRequest {
 
 /**
  * ACSリクエストの型定義。
+ *
+ * @deprecated v2.0.0で削除予定
  */
 interface ACSRequest {
   SAMLResponse: string;
@@ -56,6 +69,8 @@ interface ACSRequest {
  * AuthStateと関連するCookieを取得する。
  *
  * @returns AuthStateとCookieのオブジェクト
+ *
+ * @deprecated v2.0.0で削除予定
  */
 export async function getAuthStateM(): Promise<{ authState: string; cookieJar: CookieJar }> {
   const cookieJar = new CookieJar();
@@ -89,6 +104,7 @@ export async function getAuthStateM(): Promise<{ authState: string; cookieJar: C
  * @param username - ユーザー名 (CU_ID)
  * @returns 使用可能なログイン方法
  *
+ * @deprecated v2.0.0で削除予定
  */
 async function checkLoginType(username: string, authState: string, cookieJar: CookieJar): Promise<string[]> {
   const fetchWithCookies = fetchCookie(fetch, cookieJar);
@@ -128,6 +144,8 @@ async function checkLoginType(username: string, authState: string, cookieJar: Co
  * @param relayState - RelayState
  * @param cookieJar - CookieJar
  * @returns セッションID
+ *
+ * @deprecated v2.0.0で削除予定
  */
 async function submitAcs(samlResponse: string, relayState: string, cookieJar: CookieJar): Promise<string> {
   const fetchWithCookies = fetchCookie(fetch, cookieJar);
@@ -165,6 +183,8 @@ async function submitAcs(samlResponse: string, relayState: string, cookieJar: Co
  *
  * @param otp - OTP
  * @returns MaNaBoセッションID
+ *
+ * @deprecated v2.0.0で削除予定
  */
 export type SubmitOtpFunctionM = (otp: string) => Promise<string>;
 
@@ -177,6 +197,8 @@ export type SubmitOtpFunctionM = (otp: string) => Promise<string>;
  * @param authState - AuthState
  * @param cookieStore - CookieStore
  * @returns MaNaBoセッションID
+ *
+ * @deprecated v2.0.0で削除予定
  */
 async function loginManabo (
   username: string,
@@ -302,6 +324,8 @@ async function loginManabo (
  * @param username - ユーザー名 (CU_ID)
  * @param password - パスワード
  * @returns MaNaBoセッションIDまたはOTP送信関数
+ *
+ * @deprecated v2.0.0で削除予定
  */
 export async function getManaboSessionId(username: string, password: string): Promise<string | SubmitOtpFunctionM> {
   const { authState, cookieJar } = await getAuthStateM();
@@ -313,4 +337,21 @@ export async function getManaboSessionId(username: string, password: string): Pr
 
   const result = await loginManabo(username, password, authState, cookieJar);
   return result;
+}
+
+
+/**
+ * shib.chukyo-u.ac.jpのログインセッションを利用してALBOにログインする。
+ *
+ * @param cookieJar - CookieJar
+ */
+export async function loginManaboViaShib(cookieJar: CookieJar): Promise<void> {
+  const cfetch = fetchCookie(fetch, cookieJar);
+
+  const response = await cfetch(MANABO_LOGIN_URL, { headers: { ...defaultHttpHeaders, 'Accept': 'text/html' } });
+  if (!response.ok) {
+    throw new Error(`Failed to initiate login: ${response.statusText}`);
+  }
+
+  await handleSamlResponse(await response.text(), cookieJar);
 }

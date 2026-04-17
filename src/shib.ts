@@ -1,8 +1,7 @@
 import fetchCookie from 'fetch-cookie';
 import { CookieJar } from 'tough-cookie';
-import { JSDOM } from 'jsdom';
 
-import { defaultHttpHeaders } from './common.ts';
+import { defaultHttpHeaders, handleSamlResponse } from './common.ts';
 
 
 const INITIALIZATION_URL = 'https://shib.chukyo-u.ac.jp/clsp/login';
@@ -70,14 +69,6 @@ interface PasswordLoginRequest {
 
 
 /**
- * ACSリクエストの型定義。
- */
-interface AcsRequest {
-  SAMLResponse: string;
-}
-
-
-/**
  * ログインセッションを初期化し、AuthStateパラメータとCookieJarを返す。
  *
  * @returns AuthStateパラメータとCookieJarを含むオブジェクト
@@ -130,55 +121,6 @@ export async function checkAuthType(username: string, authState: string, cookieJ
 
   const jsonResponse: AuthTypeCheckResponse = await response.json();
   return jsonResponse.authType;
-}
-
-
-/**
- * SAMLレスポンスを処理する。
- *
- * @param responseText - パスワード認証APIからのレスポンスのテキスト
- * @param cookieJar - CookieJar
- * @returns 認証が完了した場合はtrueを返し、二段階認証が必要な場合はfalseを返す
- * @throws 認証に失敗した場合
- */
-async function handleSamlResponse(responseText: string, cookieJar: CookieJar): Promise<boolean> {
-  const cfetch = fetchCookie(fetch, cookieJar);
-  const responseDom = new JSDOM(responseText).window.document;
-  const errorElement = responseDom.querySelector('#ldaperror_area');
-  if (errorElement) {
-    const errorMessage = errorElement.querySelector('p')?.textContent?.trim() || 'Unknown error';
-    throw new Error(`Password authentication failed: ${errorMessage}`);
-  } else {
-    const trackButtonElement = responseDom.querySelector('#btntrackid');
-    if (trackButtonElement) {
-      const trackId = responseDom.querySelector('label:has(+ #btntrackid)')?.textContent?.trim() || 'Unknown TrackID';
-      throw new Error(`Unknown error during password authentication (TrackID: ${trackId})`);
-    } else {
-      const samlResponse = responseDom.querySelector('input[name="SAMLResponse"]')?.getAttribute('value');
-      if (samlResponse) {
-        const acsUrl = responseDom
-          .querySelector('form[method="post"]:has(input[name="SAMLResponse"])')?.getAttribute('action');
-        if (!acsUrl) {
-          throw new Error('Failed to handle SAML response: ACS URL not found in form action');
-        }
-        const acsPayload = { SAMLResponse: samlResponse } satisfies AcsRequest;
-        const acsResponse = await cfetch(acsUrl, {
-          method: 'POST',
-          headers: {
-            ...defaultHttpHeaders,
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Accept': 'text/html',
-          },
-          body: new URLSearchParams(acsPayload),
-        });
-        if (!acsResponse.ok) {
-          throw new Error(`Failed to submit SAML response to ACS URL: ${acsResponse.status} ${acsResponse.statusText}`);
-        }
-        return true; // 認証成功
-      }
-      return false; // 二段階認証へ進む
-    }
-  }
 }
 
 
