@@ -3,6 +3,7 @@ import { CookieJar } from 'tough-cookie';
 import { JSDOM } from 'jsdom';
 
 import { defaultHttpHeaders, handleSamlResponse } from './common.ts';
+import { hasShibSession } from './shib.ts';
 
 
 const MANABO_LOGIN_URL: string = 'https://MaNaBo.cnc.chukyo-u.ac.jp/auth/shibboleth/';
@@ -341,12 +342,16 @@ export async function getManaboSessionId(username: string, password: string): Pr
 
 
 /**
- * shib.chukyo-u.ac.jpのログインセッションを利用してALBOにログインする。
+ * shib.chukyo-u.ac.jpのログインセッションを利用してMaNaBoにログインする。
  *
  * @param cookieJar - CookieJar
  */
 export async function loginManaboViaShib(cookieJar: CookieJar): Promise<void> {
   const cfetch = fetchCookie(fetch, cookieJar);
+
+  if (!await hasShibSession(cookieJar)) {
+    throw new Error('No valid Shibboleth session found');
+  }
 
   const response = await cfetch(MANABO_LOGIN_URL, { headers: { ...defaultHttpHeaders, 'Accept': 'text/html' } });
   if (!response.ok) {

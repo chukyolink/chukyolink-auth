@@ -7,6 +7,8 @@ import { defaultHttpHeaders, handleSamlResponse } from './common.ts';
 const INITIALIZATION_URL = 'https://shib.chukyo-u.ac.jp/clsp/login';
 const AUTH_TYPE_CHECK_URL = 'https://shib.chukyo-u.ac.jp/cloudlink/module.php/cloudlink/checktype.php';
 const PASSWORD_LOGIN_URL = 'https://shib.chukyo-u.ac.jp/cloudlink/module.php/cloudlink/loginuserpass.php';
+const SHIB_LOGIN_CHECK_URL = 'https://shib.chukyo-u.ac.jp/User';
+const SHIB_SESSION_COOKIE_NAME = 'JSESSIONID';
 
 
 /**
@@ -196,4 +198,16 @@ export async function submitOtp(
   if (!samlResponse) {
     throw new Error('Failed to submit OTP authentication: SAMLResponse not found in response');
   }
+}
+
+
+/**
+ * shib.chukyo-u.ac.jpにログインセッションが存在するかをチェックする。
+ *
+ * @param cookieJar - CookieJar
+ * @returns セッションの有無
+ */
+export async function hasShibSession(cookieJar: CookieJar): Promise<boolean> {
+  const cookies = await cookieJar.getCookies(SHIB_LOGIN_CHECK_URL);
+  return cookies.some((cookie) => cookie.key === 'JSESSIONID');
 }

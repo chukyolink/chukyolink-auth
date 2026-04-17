@@ -3,6 +3,7 @@ import { CookieJar } from 'tough-cookie';
 import { JSDOM } from 'jsdom';
 
 import { defaultHttpHeaders, handleSamlResponse } from './common.ts';
+import { hasShibSession } from './shib.ts';
 
 
 const ALBO_LOGIN_URL: string = 'https://albo.chukyo-u.ac.jp/api/saml/login';
@@ -376,6 +377,10 @@ export async function getAlboSessionId(username: string, password: string): Prom
  */
 export async function loginAlboViaShib(cookieJar: CookieJar): Promise<void> {
   const cfetch = fetchCookie(fetch, cookieJar);
+
+  if (!await hasShibSession(cookieJar)) {
+    throw new Error('No valid Shibboleth session found');
+  }
 
   const response = await cfetch(ALBO_LOGIN_URL, { headers: { ...defaultHttpHeaders, 'Accept': 'text/html' } });
   if (!response.ok) {
