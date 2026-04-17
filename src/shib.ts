@@ -209,5 +209,5 @@ export async function submitOtp(
  */
 export async function hasShibSession(cookieJar: CookieJar): Promise<boolean> {
   const cookies = await cookieJar.getCookies(SHIB_LOGIN_CHECK_URL);
-  return cookies.some((cookie) => cookie.key === 'JSESSIONID');
+  return cookies.some((cookie) => cookie.key === SHIB_SESSION_COOKIE_NAME);
 }
