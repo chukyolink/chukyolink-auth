@@ -27,7 +27,7 @@ await loginManaboViaShib(cookieJar); // MaNaBoにログイン
 await loginCubicsViaShib(cookieJar); // CUBICSにログイン
 
 const cfetch = fetchCookie(fetch, cookieJar);
-await fetch('https://albo.chukyo-u.ac.jp/api/class/time-table'); // 時間割情報取得
+await cfetch('https://albo.chukyo-u.ac.jp/api/class/time-table'); // 時間割情報取得
 ```
 
 ### `package.json`
