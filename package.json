@@ -14,7 +14,7 @@
     "email": "dev@hayatek.jp",
     "url": "https://hayatek.jp/"
   },
-  "license": "UNLICENSED",
+  "license": "AGPL-3.0-only",
   "packageManager": "pnpm@10.26.0",
   "publishConfig": {
     "access": "restricted",
