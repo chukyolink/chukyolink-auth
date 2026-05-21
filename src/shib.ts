@@ -58,6 +58,8 @@ enum PasswordAuthOperation {
   Password = '0',
   /** OTP認証 */
   OTP = '1',
+  /** メール認証 */
+  Email = '2',
 }
 
 
@@ -66,12 +68,12 @@ enum PasswordAuthOperation {
  */
 interface PasswordLoginRequest {
   authtype: PasswordAuthOperation;
-  resend: '0';
-  login_exec: '1';
+  resend: '0' | '1'; // メールOTPをリクエストするとき '1'
+  login_exec: '1' | '0'; // メールOTPをリクエストするとき '0'
   username: string;
-  password: string;
+  password: string; // メールOTPのリクエストのときは空文字列
   AuthState: string;
-  hide?: '1';
+  hide?: '1'; // OTPまたはメールOTP送信のときのみ設定可能
 }
 
 
@@ -170,21 +172,53 @@ export async function submitPassword(
 
 
 /**
+ * メールOTPをリクエストする。
+ *
+ * @param username - ユーザー名（CU_ID）
+ * @param authState - AuthState
+ * @param cookieJar - CookieJar
+ * @throws 認証に失敗した場合
+ */
+export async function requestEmailOtp(username: string, authState: string, cookieJar: CookieJar): Promise<void> {
+  const cfetch = fetchCookie(fetch, cookieJar);
+  const payload = {
+    authtype: PasswordAuthOperation.Email,
+    resend: '1',
+    login_exec: '0',
+    username: username,
+    password: '',
+    AuthState: authState,
+  } satisfies PasswordLoginRequest;
+  const response = await cfetch(PASSWORD_LOGIN_URL, {
+    method: 'POST',
+    headers: { ...defaultHttpHeaders, 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'text/html' },
+    body: new URLSearchParams(payload),
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to request email OTP: ${response.status} ${response.statusText}`);
+  }
+}
+
+
+/**
  * 認証APIにOTPを送信する。
  * @param username - ユーザー名（CU_ID）
  * @param otp - OTP
  * @param authState - AuthState
  * @param cookieJar - CookieJar
  * @param isTrustDevice - 次回以降のOTP認証を省略するフラグ（デフォルトはfalse）
+ * @param isEmailOtp - OTPがメールOTPであるかどうかを示すフラグ（デフォルトはfalse）
  * @throws 認証に失敗した場合
  */
 export async function submitOtp(
-  username: string, otp: string, authState: string, cookieJar: CookieJar, isTrustDevice: boolean = false,
+  username: string, otp: string, authState: string, cookieJar: CookieJar,
+  isTrustDevice: boolean = false, isEmailOtp: boolean = false,
+
 ): Promise<void> {
   const cfetch = fetchCookie(fetch, cookieJar);
 
   const payload = {
-    authtype: PasswordAuthOperation.OTP,
+    authtype: isEmailOtp ? PasswordAuthOperation.Email : PasswordAuthOperation.OTP,
     resend: '0',
     login_exec: '1',
     username: username,
