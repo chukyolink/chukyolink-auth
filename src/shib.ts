@@ -66,10 +66,12 @@ enum PasswordAuthOperation {
  */
 interface PasswordLoginRequest {
   authtype: PasswordAuthOperation;
+  resend: '0';
   login_exec: '1';
   username: string;
   password: string;
   AuthState: string;
+  hide?: '1';
 }
 
 
@@ -146,6 +148,7 @@ export async function submitPassword(
 
   const payload = {
     authtype: PasswordAuthOperation.Password,
+    resend: '0',
     login_exec: '1',
     username: username,
     password: password,
@@ -172,19 +175,22 @@ export async function submitPassword(
  * @param otp - OTP
  * @param authState - AuthState
  * @param cookieJar - CookieJar
+ * @param isTrustDevice - 次回以降のOTP認証を省略するフラグ（デフォルトはfalse）
  * @throws 認証に失敗した場合
  */
 export async function submitOtp(
-  username: string, otp: string, authState: string, cookieJar: CookieJar,
+  username: string, otp: string, authState: string, cookieJar: CookieJar, isTrustDevice: boolean = false,
 ): Promise<void> {
   const cfetch = fetchCookie(fetch, cookieJar);
 
   const payload = {
     authtype: PasswordAuthOperation.OTP,
+    resend: '0',
     login_exec: '1',
     username: username,
     password: otp,
     AuthState: authState,
+    ...(isTrustDevice && { hide: '1' }),
   } satisfies PasswordLoginRequest;
 
   const response = await cfetch(PASSWORD_LOGIN_URL, {
