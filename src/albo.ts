@@ -10,6 +10,7 @@ import { hasShibSession } from './shib.ts';
 
 
 const ALBO_LOGIN_URL: string = 'https://albo.chukyo-u.ac.jp/api/saml/login';
+const ALBO_LOGOUT_URL: string = 'https://albo.chukyo-u.ac.jp/api/auth/logout';
 /** @deprecated v2.0.0で削除予定 */
 const LOGIN_TYPE_CHECKING_URL: string = 'https://shib.chukyo-u.ac.jp/cloudlink/module.php/cloudlink/checktype.php';
 /** @deprecated v2.0.0で削除予定 */
@@ -391,4 +392,19 @@ export async function loginAlboViaShib(cookieJar: CookieJar): Promise<void> {
   }
 
   await handleSamlResponse(await response.text(), cookieJar);
+}
+
+
+/**
+ * ALBOからログアウトする。
+ *
+ * @param cookieJar - CookieJar
+ * @throws ログアウトに失敗した場合
+ */
+export async function logoutAlbo(cookieJar: CookieJar): Promise<void> {
+  const cfetch = fetchCookie(fetch, cookieJar);
+  const response = await cfetch(ALBO_LOGOUT_URL, { headers: { ...defaultHttpHeaders, 'Accept': 'text/html' } });
+  if (!response.ok) {
+    throw new Error(`Failed to logout: ${response.statusText}`);
+  }
 }

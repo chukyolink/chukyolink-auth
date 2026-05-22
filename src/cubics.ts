@@ -10,6 +10,7 @@ import type { CookieJar } from 'tough-cookie';
 
 
 const CUBICS_LOGIN_URL = 'https://cubics-as.chukyo-u.ac.jp/unias/UnSSOLoginControl2';
+const CUBICS_LOGOUT_URL = 'https://cubics-as.chukyo-u.ac.jp/unias/UnLogout';
 
 
 /**
@@ -30,4 +31,19 @@ export async function loginCubicsViaShib(cookieJar: CookieJar): Promise<void> {
   }
 
   await handleSamlResponse(await response.text(), cookieJar);
+}
+
+
+/**
+ * CUBICSからログアウトする。
+ *
+ * @param cookieJar - CookieJar
+ * @throws ログアウトに失敗した場合
+ */
+export async function logoutCubics(cookieJar: CookieJar): Promise<void> {
+  const cfetch = fetchCookie(fetch, cookieJar);
+  const response = await cfetch(CUBICS_LOGOUT_URL, { headers: { ...defaultHttpHeaders, 'Accept': 'text/html' } });
+  if (!response.ok) {
+    throw new Error(`Failed to logout: ${response.statusText}`);
+  }
 }

@@ -10,6 +10,7 @@ import { hasShibSession } from './shib.ts';
 
 
 const MANABO_LOGIN_URL: string = 'https://MaNaBo.cnc.chukyo-u.ac.jp/auth/shibboleth/';
+const MANABO_LOGOUT_URL: string = 'https://manabo.cnc.chukyo-u.ac.jp/logout/';
 /** @deprecated v2.0.0で削除予定 */
 const LOGIN_TYPE_CHECKING_URL: string = 'https://shib.chukyo-u.ac.jp/cloudlink/module.php/cloudlink/checktype.php';
 /** @deprecated v2.0.0で削除予定 */
@@ -362,4 +363,19 @@ export async function loginManaboViaShib(cookieJar: CookieJar): Promise<void> {
   }
 
   await handleSamlResponse(await response.text(), cookieJar);
+}
+
+
+/**
+ * MaNaBoからログアウトする。
+ *
+ * @param cookieJar - CookieJar
+ * @throws ログアウトに失敗した場合
+ */
+export async function logoutManabo(cookieJar: CookieJar): Promise<void> {
+  const cfetch = fetchCookie(fetch, cookieJar);
+  const response = await cfetch(MANABO_LOGOUT_URL, { headers: { ...defaultHttpHeaders, 'Accept': 'text/html' } });
+  if (!response.ok) {
+    throw new Error(`Failed to logout: ${response.statusText}`);
+  }
 }

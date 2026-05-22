@@ -7,7 +7,8 @@ import { CookieJar } from 'tough-cookie';
 import { defaultHttpHeaders, handleSamlResponse } from './common.ts';
 
 
-const INITIALIZATION_URL = 'https://shib.chukyo-u.ac.jp/clsp/login';
+const SHIB_LOGIN_URL = 'https://shib.chukyo-u.ac.jp/clsp/login';
+const SHIB_LOGOUT_URL = 'https://shib.chukyo-u.ac.jp/User/Logout';
 const AUTH_TYPE_CHECK_URL = 'https://shib.chukyo-u.ac.jp/cloudlink/module.php/cloudlink/checktype.php';
 const PASSWORD_LOGIN_URL = 'https://shib.chukyo-u.ac.jp/cloudlink/module.php/cloudlink/loginuserpass.php';
 const SHIB_LOGIN_CHECK_URL = 'https://shib.chukyo-u.ac.jp/User';
@@ -86,7 +87,7 @@ export async function initializeLoginSession(): Promise<{ authState: string, coo
   const cookieJar = new CookieJar();
   const cfetch = fetchCookie(fetch, cookieJar);
 
-  const response = await cfetch(INITIALIZATION_URL, { headers: { ...defaultHttpHeaders, 'Accept': 'text/html' } });
+  const response = await cfetch(SHIB_LOGIN_URL, { headers: { ...defaultHttpHeaders, 'Accept': 'text/html' } });
   if (!response.ok) {
     throw new Error(`Failed to initialize login session: ${response.status} ${response.statusText}`);
   }
@@ -253,4 +254,16 @@ export async function submitOtp(
 export async function hasShibSession(cookieJar: CookieJar): Promise<boolean> {
   const cookies = await cookieJar.getCookies(SHIB_LOGIN_CHECK_URL);
   return cookies.some((cookie) => cookie.key === SHIB_SESSION_COOKIE_NAME);
+}
+
+
+/**
+ * shib.chukyo-u.ac.jpからログアウトする。
+ *
+ * @param cookieJar - CookieJar
+*/
+export async function logoutShib(cookieJar: CookieJar): Promise<void> {
+  const cfetch = fetchCookie(fetch, cookieJar);
+  // エラーチェックをすべきではあるが、認証システムに不具合があるため修正されるまでは無視する
+  await cfetch(SHIB_LOGOUT_URL, { headers: { ...defaultHttpHeaders, 'Accept': 'text/html' } });
 }
