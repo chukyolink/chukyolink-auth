@@ -8,6 +8,7 @@
 import {
   AuthType, initializeLoginSession, checkAuthType, submitPassword, submitOtp,
   loginAlboViaShib, loginManaboViaShib, loginCubicsViaShib,
+  logoutShib, logoutAlbo, logoutManabo, logoutCubics,
 } from '@chukyolink/auth';
 
 import fetchCookie from 'fetch-cookie';
@@ -28,6 +29,11 @@ await loginCubicsViaShib(cookieJar); // CUBICSにログイン
 
 const cfetch = fetchCookie(fetch, cookieJar);
 await cfetch('https://albo.chukyo-u.ac.jp/api/class/time-table'); // 時間割情報取得
+
+await logoutAlbo(cookieJar); // ALBOからログアウト
+await logoutManabo(cookieJar); // MaNaBoからログアウト
+await logoutCubics(cookieJar); // CUBICSからログアウト
+await logoutShib(cookieJar); // 認証サーバーからログアウト
 ```
 
 ### `package.json`
@@ -35,7 +41,7 @@ await cfetch('https://albo.chukyo-u.ac.jp/api/class/time-table'); // 時間割�
 ```json
 {
   "dependencies": {
-    "@chukyolink/auth": "^v1.2.0"
+    "@chukyolink/auth": "^1.3.0"
   }
 }
 ```
