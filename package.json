@@ -2,9 +2,11 @@
   "name": "@chukyolink/auth",
   "version": "1.3.0",
   "description": "中京大学の認証システムを利用するためのパッケージ",
+  "homepage": "https://chukyolink.github.io/chukyolink-auth",
   "type": "module",
   "scripts": {
     "build": "tsup",
+    "build:docs": "typedoc",
     "lint": "eslint",
     "lint:fix": "eslint --fix",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -41,6 +43,7 @@
     "globals": "^17.5.0",
     "jiti": "^2.6.1",
     "tsup": "^8.5.1",
+    "typedoc": "^0.28.19",
     "typescript": "^6.0.2"
   },
   "dependencies": {
