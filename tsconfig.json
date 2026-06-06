@@ -1,4 +1,5 @@
 {
+  "$schema": "https://json.schemastore.org/tsconfig",
   // Visit https://aka.ms/tsconfig to read more about this file
   "compilerOptions": {
     // File Layout
@@ -8,10 +9,10 @@
     // Environment Settings
     // See also https://aka.ms/tsconfig/module
     "module": "esnext",
-    "target": "esnext",
+    "target": "es2024",
     // "types": [],
     // For nodejs:
-    "lib": ["esnext"],
+    "lib": ["es2024"],
     "types": ["node"],
     // and npm install -D @types/node
     // Other Outputs
@@ -20,19 +21,28 @@
     "declarationMap": false,
 
     // Stricter Typechecking Options
-    "noUncheckedIndexedAccess": true,
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false,
+    "alwaysStrict": true,
     "exactOptionalPropertyTypes": true,
-
-    // Style Options
-    // "noImplicitReturns": true,
-    // "noImplicitOverride": true,
-    // "noUnusedLocals": true,
-    // "noUnusedParameters": true,
-    // "noFallthroughCasesInSwitch": true,
-    // "noPropertyAccessFromIndexSignature": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitAny": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noUncheckedIndexedAccess": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "strict": true,
+    "strictBindCallApply": true,
+    "strictBuiltinIteratorReturn": true,
+    "strictFunctionTypes": true,
+    "strictNullChecks": true,
+    "strictPropertyInitialization": true,
+    "useUnknownInCatchVariables": true,
 
     // Recommended Options
-    "strict": true,
     "jsx": "react-jsx",
     "verbatimModuleSyntax": true,
     "isolatedModules": true,
@@ -42,7 +52,7 @@
 
     "rewriteRelativeImportExtensions": true,
 
-    // tsupの対応までの一時的な措置
+    // tsupのbaseUrl対応までの一時的な措置
     "ignoreDeprecations": "6.0"
   },
   "include": ["./src/**.ts"],
