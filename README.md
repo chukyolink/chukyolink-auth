@@ -49,6 +49,5 @@ await logoutShib(cookieJar); // 認証サーバーからログアウト
 ### `.npmrc`
 
 ```npmrc
-//npm.pkg.github.com/:_authToken=${GHPR_NPM_TOKEN}
 @chukyolink:registry=https://npm.pkg.github.com
 ```
