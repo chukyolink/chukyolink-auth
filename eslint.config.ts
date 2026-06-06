@@ -10,7 +10,7 @@ import tsdoc from 'eslint-plugin-tsdoc';
 import unicorn from 'eslint-plugin-unicorn';
 
 export default defineConfig([
-  globalIgnores(['dist/**', 'node_modules/**']),
+  globalIgnores(['dist/**', 'docs/**', 'node_modules/**']),
   js.configs.recommended,
   unicorn.configs.recommended,
   {
