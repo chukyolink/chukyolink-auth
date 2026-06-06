@@ -18,7 +18,7 @@ const SHIB_SESSION_COOKIE_NAME = 'JSESSIONID';
 /**
  * 認証方式の種類を表す列挙型。
  */
-enum AuthType {
+export enum AuthType {
   /** パスワード認証（2段階認証なし） */
   Password = 'Password',
   /** パスワード認証（OTP必須） */
