@@ -40,7 +40,10 @@
     "moduleDetection": "force",
     "skipLibCheck": true,
 
-    "rewriteRelativeImportExtensions": true
+    "rewriteRelativeImportExtensions": true,
+
+    // tsupの対応までの一時的な措置
+    "ignoreDeprecations": "6.0"
   },
   "include": ["./src/**.ts"],
   "exclude": ["./node_modules", "./dist"]

@@ -6,6 +6,8 @@ import { parse } from 'node-html-parser';
 
 import type { CookieJar } from 'tough-cookie';
 
+declare const __VERSION__: string;
+
 
 /**
  * ACSリクエストの型定義。
@@ -20,7 +22,7 @@ interface AcsRequest {
  * HTTPリクエストに用いるデフォルトのヘッダー。
  */
 export const defaultHttpHeaders = {
-  'User-Agent': 'ChukyoLinkAuth/1.3.0 (https://chukyo.link/)',
+  'User-Agent': `ChukyoLinkAuth/${__VERSION__} (https://chukyo.link/)`,
   'Accept': 'application/json',
   'Content-Type': 'application/json',
   'Cache-Control': 'no-cache',
