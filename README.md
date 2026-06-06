@@ -41,7 +41,7 @@ await logoutShib(cookieJar); // 認証サーバーからログアウト
 ```json
 {
   "dependencies": {
-    "@chukyolink/auth": "^1.3.0"
+    "@chukyolink/auth": "^2.0.0"
   }
 }
 ```
@@ -49,6 +49,6 @@ await logoutShib(cookieJar); // 認証サーバーからログアウト
 ### `.npmrc`
 
 ```npmrc
-//npm.pkg.github.com/:_authToken=${GITHUB_NPM_TOKEN}
+//npm.pkg.github.com/:_authToken=${GHPR_NPM_TOKEN}
 @chukyolink:registry=https://npm.pkg.github.com
 ```
