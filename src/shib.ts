@@ -129,7 +129,7 @@ export async function checkAuthType(username: string, authState: string, cookieJ
     throw new Error(`Failed to check authentication type: ${response.status} ${response.statusText}`);
   }
 
-  const jsonResponse: AuthTypeCheckResponse = await response.json();
+  const jsonResponse = await response.json() as AuthTypeCheckResponse;
   return jsonResponse.authType;
 }
 

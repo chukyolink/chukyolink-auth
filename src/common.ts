@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import fetchCookie from 'fetch-cookie';
-import { JSDOM } from 'jsdom';
+import { parse } from 'node-html-parser';
 
 import type { CookieJar } from 'tough-cookie';
 
@@ -37,7 +37,7 @@ export const defaultHttpHeaders = {
  */
 export async function handleSamlResponse(responseText: string, cookieJar: CookieJar): Promise<boolean> {
   const cfetch = fetchCookie(fetch, cookieJar);
-  const responseDom = new JSDOM(responseText).window.document;
+  const responseDom = parse(responseText);
   const errorElement = responseDom.querySelector('#ldaperror_area');
   if (errorElement) {
     const errorMessage = errorElement.querySelector('p')?.textContent?.trim() || 'Unknown error';
