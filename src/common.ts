@@ -22,7 +22,7 @@ interface AcsRequest {
  * HTTPリクエストに用いるデフォルトのヘッダー。
  */
 export const defaultHttpHeaders = {
-  'User-Agent': `ChukyoLinkAuth/${__VERSION__} (https://chukyo.link/)`,
+  'User-Agent': `ChukyoLink-Auth/${__VERSION__} (https://github.com/chukyolink/chukyolink-auth)`,
   'Accept': 'application/json',
   'Content-Type': 'application/json',
   'Cache-Control': 'no-cache',
